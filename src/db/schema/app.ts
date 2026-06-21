@@ -1,5 +1,5 @@
 import { relations, sql } from "drizzle-orm";
-import { foreignKey, integer, pgTable, timestamp, varchar } from "drizzle-orm/pg-core";
+import { integer, pgTable, timestamp, varchar } from "drizzle-orm/pg-core";
 
 const timestamps = {
     created_at: timestamp("created_at").defaultNow().notNull(),
