@@ -35,7 +35,8 @@ async function main() {
     console.log("\nCRUD operations completed successfully.");
   } catch (error) {
     console.error("❌ Error performing CRUD operations:", error);
-    process.exit(1);
+    process.exitCode = 1;
+    return;
   } finally {
     await pool.end();
     console.log("Database pool closed.");

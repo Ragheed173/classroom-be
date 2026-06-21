@@ -1,9 +1,9 @@
-import { relations } from "drizzle-orm";
+import { relations, sql } from "drizzle-orm";
 import { foreignKey, integer, pgTable, timestamp, varchar } from "drizzle-orm/pg-core";
 
 const timestamps = {
     created_at: timestamp("created_at").defaultNow().notNull(),
-    updated_at: timestamp("updated_at").defaultNow().$onUpdate(() => new Date()),
+    updated_at: timestamp("updated_at").defaultNow().$onUpdate(() => sql`now()`),
 }
 
 export const departments = pgTable("departments", {
