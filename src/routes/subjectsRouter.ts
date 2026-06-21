@@ -8,23 +8,26 @@ const router = express.Router();
 router.get('/', async (req, res) => {
    try {
     const {search, department, page = 1, limit = 10} = req.query;
-    const currentPage = Math.max(1, Number(page));
-    const limitPerPAge = Math.max(1, Number(limit));
+    const currentPage = Math.max(1, parseInt(String(page), 10) || 1);
+    const limitPerPAge = Math.max(1, parseInt(String(limit), 10) || 100);
+
     const offset = (currentPage - 1) * limitPerPAge;
 
     const filterConditions: SQL[] = [];
 
     if (typeof search === "string" && search) {
+            const searchPattern = `%${String(search).replace(/[%,]/g, '\\$&')}%`;
         filterConditions.push(
             or(
-                ilike(subjects.name, `%${search}%`),
-                ilike(subjects.code, `%${search}%`),
+                ilike(subjects.name, searchPattern),
+                ilike(subjects.code, searchPattern),
             )!
         );
     }
 
     if (typeof department === "string" && department) {
-        filterConditions.push(ilike(departments.name, `%${department}%`));
+        const deptPattern = `%${String(department).replace(/[%,]/g, '\\$&')}%`;
+        filterConditions.push(ilike(departments.name, deptPattern));
     }
 
     const whereClause = filterConditions.length > 0 ? and(...filterConditions) : undefined;
