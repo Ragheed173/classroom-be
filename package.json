@@ -9,7 +9,7 @@
     "build": "tsc",
     "demo:crud": "tsx src/index.ts",
     "db:generate": "drizzle-kit generate",
-    "db:migrate": "drizzle-kit migrate",
+    "db:migrate": "tsx src/db/migrate.ts",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
