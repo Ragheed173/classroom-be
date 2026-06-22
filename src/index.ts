@@ -1,4 +1,4 @@
-import "dotenv/config";
+import "./apm.js";
 
 const REQUIRED_ENV = [
   "DATABASE_URL",
@@ -19,15 +19,6 @@ function validateEnv(): void {
 
 async function bootstrap(): Promise<void> {
   validateEnv();
-
-  if (process.env.APMINSIGHT_ENABLED === "true") {
-    try {
-      const { default: AgentAPI } = await import("apminsight");
-      AgentAPI.config();
-    } catch (error) {
-      console.error("Failed to initialize APM Insight:", error);
-    }
-  }
 
   const express = (await import("express")).default;
   const cors = (await import("cors")).default;
