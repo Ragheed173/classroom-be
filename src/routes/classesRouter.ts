@@ -40,7 +40,8 @@ router.get("/", async (req, res) => {
       },
     });
   } catch (error) {
-    res.status(500).json({ message: "Failed to get classes", error });
+    console.error("Failed to get classes", error);
+    return res.status(500).json({ message: "Failed to get classes" });
   }
 });
 
@@ -72,14 +73,30 @@ router.post("/", async (req, res) => {
       return res.status(400).json({ message: "Missing required class fields" });
     }
 
+    const parsedSubjectId = Number(subjectId);
+    const parsedCapacity = Number(capacity);
+    const parsedTeacherId = String(teacherId).trim();
+
+    if (!Number.isInteger(parsedSubjectId) || parsedSubjectId <= 0) {
+      return res.status(400).json({ message: "subjectId must be a positive integer" });
+    }
+    if (!Number.isInteger(parsedCapacity) || parsedCapacity <= 0) {
+      return res.status(400).json({ message: "capacity must be a positive integer" });
+    }
+    if (!parsedTeacherId) {
+      return res.status(400).json({ message: "teacherId is required" });
+    }
+    if (schedules != null && !Array.isArray(schedules)) {      return res.status(400).json({ message: "schedules must be an array when provided" });
+   }
+
     const [createdClass] = await db
       .insert(classes)
       .values({
         name,
         description,
-        subjectId: Number(subjectId),
-        teacherId: String(teacherId),
-        capacity: Number(capacity),
+        subjectId: parsedSubjectId,
+        teacherId: parsedTeacherId,
+        capacity: parsedCapacity,
         status,
         bannerUrl,
         bannerCldPubId,
@@ -90,7 +107,8 @@ router.post("/", async (req, res) => {
 
     res.status(201).json(createdClass);
   } catch (error) {
-    res.status(500).json({ message: "Failed to create class", error });
+    console.error("Failed to create class", error);
+    return res.status(500).json({ message: "Failed to create class" });
   }
 });
 
