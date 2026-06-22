@@ -2,11 +2,13 @@ import express from "express";
 import cors from "cors";
 import subjectsRouter from "./routes/subjectsRouter";
 import classesRouter from "./routes/classesRouter";
+import securityMiddleware from "./middleware/security";
 
 const app = express();
 const PORT = process.env.PORT || 8000;
 
 app.use(express.json());
+app.use(securityMiddleware);
 
 if (!process.env.FRONTEND_URL) {
   throw new Error("FRONTEND_URL is not defined");
