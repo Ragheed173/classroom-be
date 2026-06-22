@@ -1,49 +1,71 @@
 import "dotenv/config";
 
-if (process.env.APMINSIGHT_ENABLED === "true") {
-  try {
-    const { default: AgentAPI } = await import("apminsight");
-    AgentAPI.config();
-  } catch (error) {
-    console.error("Failed to initialize APM Insight:", error);
+const REQUIRED_ENV = [
+  "DATABASE_URL",
+  "FRONTEND_URL",
+  "ARCJET_KEY",
+  "BETTER_AUTH_SECRET",
+  "BETTER_AUTH_URL",
+] as const;
+
+function validateEnv(): void {
+  const missing = REQUIRED_ENV.filter((key) => !process.env[key]);
+
+  if (missing.length > 0) {
+    console.error(`Missing required environment variables: ${missing.join(", ")}`);
+    process.exit(1);
   }
 }
 
-import express from "express";
-import cors from "cors";
-import subjectsRouter from "./routes/subjectsRouter";
-import classesRouter from "./routes/classesRouter";
-import securityMiddleware from "./middleware/security";
-import { auth } from "./lib/auth";
-import { toNodeHandler } from "better-auth/node";
+async function bootstrap(): Promise<void> {
+  validateEnv();
 
-const app = express();
-const PORT = Number(process.env.PORT) || 8000;
-const HOST = "0.0.0.0";
+  if (process.env.APMINSIGHT_ENABLED === "true") {
+    try {
+      const { default: AgentAPI } = await import("apminsight");
+      AgentAPI.config();
+    } catch (error) {
+      console.error("Failed to initialize APM Insight:", error);
+    }
+  }
 
-app.use(express.json());
-app.use(securityMiddleware);
+  const express = (await import("express")).default;
+  const cors = (await import("cors")).default;
+  const { default: subjectsRouter } = await import("./routes/subjectsRouter");
+  const { default: classesRouter } = await import("./routes/classesRouter");
+  const { default: securityMiddleware } = await import("./middleware/security");
+  const { auth } = await import("./lib/auth");
+  const { toNodeHandler } = await import("better-auth/node");
 
-if (!process.env.FRONTEND_URL) {
-  throw new Error("FRONTEND_URL is not defined");
+  const app = express();
+  const port = Number(process.env.PORT) || 8000;
+  const host = "0.0.0.0";
+
+  app.use(express.json());
+  app.use(securityMiddleware);
+
+  app.use(cors({
+    origin: process.env.FRONTEND_URL,
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+    credentials: true,
+  }));
+
+  app.all("/api/auth/*splat", toNodeHandler(auth));
+
+  app.get("/", (_req, res) => {
+    res.send("Classroom API is running.");
+  });
+
+  app.use("/api/subjects", subjectsRouter);
+  app.use("/api/classes", classesRouter);
+
+  app.listen(port, host, () => {
+    console.log(`Server running on ${host}:${port}`);
+  });
 }
 
-app.use(cors({
-  origin: process.env.FRONTEND_URL,
-  methods: ["GET", "POST", "PUT", "DELETE"],
-  allowedHeaders: ["Content-Type", "Authorization"],
-  credentials: true,
-}));
-
-app.all("/api/auth/*splat", toNodeHandler(auth));
-
-app.get("/", (req, res) => {
-  res.send("Classroom API is running.");
-});
-
-app.use("/api/subjects", subjectsRouter);
-app.use("/api/classes", classesRouter);
-
-app.listen(PORT, HOST, () => {
-  console.log(`Server running on ${HOST}:${PORT}`);
+bootstrap().catch((error) => {
+  console.error("Failed to start server:", error);
+  process.exit(1);
 });
