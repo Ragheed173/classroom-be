@@ -3,6 +3,8 @@ import cors from "cors";
 import subjectsRouter from "./routes/subjectsRouter";
 import classesRouter from "./routes/classesRouter";
 import securityMiddleware from "./middleware/security";
+import { auth } from "./lib/auth";
+import { toNodeHandler } from "better-auth/node";
 
 const app = express();
 const PORT = process.env.PORT || 8000;
@@ -20,6 +22,8 @@ app.use(cors({
   allowedHeaders: ["Content-Type", "Authorization"],
   credentials: true,
 }));
+
+app.all('/api/auth/*splat', toNodeHandler(auth));
 
 app.get("/", (req, res) => {
   res.send("Classroom API is running.");

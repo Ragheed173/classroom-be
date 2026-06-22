@@ -1,22 +1,25 @@
-import arcjet, { detectBot, shield, slidingWindow } from "@arcjet/node";
+import arcjet, { detectBot, shield, slidingWindow, type ArcjetMode } from "@arcjet/node";
 
 if (!process.env.ARCJET_KEY) {
     throw new Error("ARCJET_KEY is not set in .env file");
 }
 
+export const arcjetMode: ArcjetMode =
+    process.env.ARCJET_ENV === "development" ? "DRY_RUN" : "LIVE";
+
 const aj = arcjet({
     key: process.env.ARCJET_KEY!,
     rules: [
-      shield({ mode: "LIVE" }),
+      shield({ mode: arcjetMode }),
       detectBot({
-        mode: "LIVE", 
+        mode: arcjetMode,
         allow: [
-          "CATEGORY:SEARCH_ENGINE", 
-          "CATEGORY:PREVIEW", 
+          "CATEGORY:SEARCH_ENGINE",
+          "CATEGORY:PREVIEW",
         ],
       }),
       slidingWindow({
-        mode: "LIVE",
+        mode: arcjetMode,
         interval: 2,
         max: 5,
       })
