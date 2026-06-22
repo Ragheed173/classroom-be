@@ -1,6 +1,7 @@
 import express from "express";
 import cors from "cors";
 import subjectsRouter from "./routes/subjectsRouter";
+import classesRouter from "./routes/classesRouter";
 
 const app = express();
 const PORT = process.env.PORT || 8000;
@@ -23,6 +24,7 @@ app.get("/", (req, res) => {
 });
 
 app.use("/api/subjects", subjectsRouter);
+app.use("/api/classes", classesRouter);
 
 app.listen(PORT, () => {
   console.log(`Server running at http://localhost:${PORT}`);
