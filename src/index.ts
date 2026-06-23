@@ -18,78 +18,105 @@ function validateEnv(): void {
 }
 
 async function bootstrap(): Promise<void> {
-  validateEnv();
+  try {
+    console.log("BOOTSTRAP START");
 
-  const express = (await import("express")).default;
-  const cors = (await import("cors")).default;
-  const { default: subjectsRouter } = await import("./routes/subjectsRouter.js");
-  const { default: classesRouter } = await import("./routes/classesRouter.js");
-  const { default: usersRouter } = await import("./routes/usersRouter.js");
-  const { default: securityMiddleware } = await import("./middleware/security.js");
-  const { auth } = await import("./lib/auth.js");
-  const { toNodeHandler } = await import("better-auth/node");
+    validateEnv();
+    console.log("ENV OK");
 
-  const app = express();
-  const port = Number(process.env.PORT) || 8000;
+    const express = (await import("express")).default;
+    console.log("EXPRESS OK");
 
-  app.use(cors({
-    origin: (origin, callback) => {
-      if (!origin) {
-        return callback(null, true);
-      }
+    const cors = (await import("cors")).default;
+    console.log("CORS OK");
 
-      app.use(express.json());
-      app.use(securityMiddleware);
+    const { default: subjectsRouter } = await import("./routes/subjectsRouter.js");
+    console.log("SUBJECTS OK");
 
-      const allowedOrigins = process.env.FRONTEND_URL
+    const { default: classesRouter } = await import("./routes/classesRouter.js");
+    console.log("CLASSES OK");
+
+    const { default: usersRouter } = await import("./routes/usersRouter.js");
+    console.log("USERS OK");
+
+    const { default: securityMiddleware } = await import("./middleware/security.js");
+    console.log("SECURITY OK");
+
+    const { auth } = await import("./lib/auth.js");
+    console.log("AUTH OK");
+
+    const { toNodeHandler } = await import("better-auth/node");
+    console.log("BETTER AUTH OK");
+
+    const app = express();
+
+    const port = Number(process.env.PORT) || 8080;
+
+    const allowedOrigins =
+      process.env.FRONTEND_URL
         ?.split(",")
         .map((origin) => origin.trim().replace(/\/$/, ""))
         .filter(Boolean) ?? [];
 
-      const originAllowed = allowedOrigins.some((allowedOrigin) => {
-        const normalizedAllowed = allowedOrigin.replace(/\/$/, "");
-        const normalizedOrigin = origin.replace(/\/$/, "");
-        return normalizedOrigin === normalizedAllowed;
-      });
+    console.log("ALLOWED ORIGINS =", allowedOrigins);
+    console.log("PORT =", process.env.PORT);
 
-      if (originAllowed) {
-        return callback(null, true);
-      }
+    app.use(
+      cors({
+        origin: true,
+        credentials: true,
+      })
+    );
 
-      callback(new Error("CORS origin denied."));
-    },
-    methods: ["GET", "POST", "PUT", "DELETE"],
-    allowedHeaders: ["Content-Type", "Authorization"],
-    credentials: true,
-    optionsSuccessStatus: 200,
-  }));
+    app.use(express.json());
 
-  app.all("/api/auth/*splat", toNodeHandler(auth));
-
-  app.get("/", (req, res) => {
-    res.send("Classroom API is running.");
-  });
-
-  app.use("/api/subjects", subjectsRouter);
-  app.use("/api/classes", classesRouter);
-  app.use("/api/users", usersRouter);
-
-  app.use("/subjects", subjectsRouter);
-  app.use("/classes", classesRouter);
-  app.use("/users", usersRouter);
-
-  app.get("/health", (_req, res) => {
-    res.status(200).json({
-      status: "ok",
+    app.get("/", (_req, res) => {
+      res.send("Classroom API is running.");
     });
-  });
 
-  console.log("PORT =", process.env.PORT);
+    app.get("/health", (_req, res) => {
+      res.status(200).json({
+        status: "ok",
+      });
+    });
 
-  app.listen(port, () => {
-    console.log(`Server running on port ${port}`);
-  });
+    app.all("/api/auth/*splat", toNodeHandler(auth));
+
+    app.use(securityMiddleware);
+
+    app.use("/api/subjects", subjectsRouter);
+    app.use("/api/classes", classesRouter);
+    app.use("/api/users", usersRouter);
+
+    app.use("/subjects", subjectsRouter);
+    app.use("/classes", classesRouter);
+    app.use("/users", usersRouter);
+
+    app.listen(port, () => {
+      console.log(`Server running on port ${port}`);
+    });
+  } catch (error) {
+    console.error("BOOTSTRAP ERROR:");
+    console.error(error);
+    throw error;
+  }
 }
+
+bootstrap().catch((error) => {
+  console.error("FAILED TO START SERVER");
+  console.error(error);
+  process.exit(1);
+});
+
+process.on("uncaughtException", (err) => {
+  console.error("UNCAUGHT EXCEPTION:");
+  console.error(err);
+});
+
+process.on("unhandledRejection", (err) => {
+  console.error("UNHANDLED REJECTION:");
+  console.error(err);
+});
 
 bootstrap().catch((error) => {
   console.error("Failed to start server:", error);
