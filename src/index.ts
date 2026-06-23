@@ -1,5 +1,5 @@
 //import "./apm.js";
-
+console.log("FILE LOADED");
 const REQUIRED_ENV = [
   "DATABASE_URL",
   "FRONTEND_URL",
@@ -92,9 +92,18 @@ async function bootstrap(): Promise<void> {
     app.use("/classes", classesRouter);
     app.use("/users", usersRouter);
 
-    app.listen(port, () => {
+    const server = app.listen(port, () => {
       console.log(`Server running on port ${port}`);
     });
+
+    const shutdown = () => {
+      console.log("Shutting down gracefully...");
+      server.close(() => process.exit(0));
+      setTimeout(() => process.exit(1), 10_000).unref();
+    };
+
+    process.on("SIGTERM", shutdown);
+    process.on("SIGINT", shutdown);
   } catch (error) {
     console.error("BOOTSTRAP ERROR:");
     console.error(error);
@@ -102,23 +111,17 @@ async function bootstrap(): Promise<void> {
   }
 }
 
-bootstrap().catch((error) => {
-  console.error("FAILED TO START SERVER");
-  console.error(error);
+process.on("uncaughtException", (err) => {
+  console.error("UNCAUGHT EXCEPTION:", err);
   process.exit(1);
 });
 
-process.on("uncaughtException", (err) => {
-  console.error("UNCAUGHT EXCEPTION:");
-  console.error(err);
-});
-
 process.on("unhandledRejection", (err) => {
-  console.error("UNHANDLED REJECTION:");
-  console.error(err);
+  console.error("UNHANDLED REJECTION:", err);
+  process.exit(1);
 });
 
 bootstrap().catch((error) => {
-  console.error("Failed to start server:", error);
+  console.error("FAILED TO START SERVER:", error);
   process.exit(1);
 });
