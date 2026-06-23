@@ -36,11 +36,33 @@ async function bootstrap(): Promise<void> {
   app.use(express.json());
   app.use(securityMiddleware);
 
+  const allowedOrigins = process.env.FRONTEND_URL
+    ?.split(",")
+    .map((origin) => origin.trim().replace(/\/$/, ""))
+    .filter(Boolean) ?? [];
+
   app.use(cors({
-    origin: process.env.FRONTEND_URL,
+    origin: (origin, callback) => {
+      if (!origin) {
+        return callback(null, true);
+      }
+
+      const originAllowed = allowedOrigins.some((allowedOrigin) => {
+        const normalizedAllowed = allowedOrigin.replace(/\/$/, "");
+        const normalizedOrigin = origin.replace(/\/$/, "");
+        return normalizedOrigin === normalizedAllowed;
+      });
+
+      if (originAllowed) {
+        return callback(null, true);
+      }
+
+      callback(new Error("CORS origin denied."));
+    },
     methods: ["GET", "POST", "PUT", "DELETE"],
     allowedHeaders: ["Content-Type", "Authorization"],
     credentials: true,
+    optionsSuccessStatus: 200,
   }));
 
   app.all("/api/auth/*splat", toNodeHandler(auth));
@@ -52,6 +74,12 @@ async function bootstrap(): Promise<void> {
   app.use("/api/subjects", subjectsRouter);
   app.use("/api/classes", classesRouter);
   app.use("/api/users", usersRouter);
+
+  // Accept the same routes without the /api prefix for deployments where
+  // the frontend is configured with the root backend URL.
+  app.use("/subjects", subjectsRouter);
+  app.use("/classes", classesRouter);
+  app.use("/users", usersRouter);
 
   app.listen(port, host, () => {
     console.log(`Server running on http://localhost:${port}`);
