@@ -33,6 +33,12 @@ async function bootstrap(): Promise<void> {
   const port = Number(process.env.PORT) || 8000;
   const host = "0.0.0.0";
 
+  app.use(cors({
+    origin: (origin, callback) => {
+      if (!origin) {
+        return callback(null, true);
+      }
+
   app.use(express.json());
   app.use(securityMiddleware);
 
@@ -40,12 +46,6 @@ async function bootstrap(): Promise<void> {
     ?.split(",")
     .map((origin) => origin.trim().replace(/\/$/, ""))
     .filter(Boolean) ?? [];
-
-  app.use(cors({
-    origin: (origin, callback) => {
-      if (!origin) {
-        return callback(null, true);
-      }
 
       const originAllowed = allowedOrigins.some((allowedOrigin) => {
         const normalizedAllowed = allowedOrigin.replace(/\/$/, "");
@@ -75,8 +75,6 @@ async function bootstrap(): Promise<void> {
   app.use("/api/classes", classesRouter);
   app.use("/api/users", usersRouter);
 
-  // Accept the same routes without the /api prefix for deployments where
-  // the frontend is configured with the root backend URL.
   app.use("/subjects", subjectsRouter);
   app.use("/classes", classesRouter);
   app.use("/users", usersRouter);
