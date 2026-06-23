@@ -22,10 +22,11 @@ async function bootstrap(): Promise<void> {
 
   const express = (await import("express")).default;
   const cors = (await import("cors")).default;
-  const { default: subjectsRouter } = await import("./routes/subjectsRouter");
-  const { default: classesRouter } = await import("./routes/classesRouter");
-  const { default: securityMiddleware } = await import("./middleware/security");
-  const { auth } = await import("./lib/auth");
+  const { default: subjectsRouter } = await import("./routes/subjectsRouter.js");
+  const { default: classesRouter } = await import("./routes/classesRouter.js");
+  const { default: usersRouter } = await import("./routes/usersRouter.js");
+  const { default: securityMiddleware } = await import("./middleware/security.js");
+  const { auth } = await import("./lib/auth.js");
   const { toNodeHandler } = await import("better-auth/node");
 
   const app = express();
@@ -50,9 +51,10 @@ async function bootstrap(): Promise<void> {
 
   app.use("/api/subjects", subjectsRouter);
   app.use("/api/classes", classesRouter);
+  app.use("/api/users", usersRouter);
 
   app.listen(port, host, () => {
-    console.log(`Server running on ${host}:${port}`);
+    console.log(`Server running on http://localhost:${port}`);
   });
 }
 
