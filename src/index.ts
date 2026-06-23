@@ -1,4 +1,4 @@
-import "./apm.js";
+//import "./apm.js";
 
 const REQUIRED_ENV = [
   "DATABASE_URL",
@@ -31,7 +31,6 @@ async function bootstrap(): Promise<void> {
 
   const app = express();
   const port = Number(process.env.PORT) || 8000;
-  const host = "0.0.0.0";
 
   app.use(cors({
     origin: (origin, callback) => {
@@ -39,13 +38,13 @@ async function bootstrap(): Promise<void> {
         return callback(null, true);
       }
 
-  app.use(express.json());
-  app.use(securityMiddleware);
+      app.use(express.json());
+      app.use(securityMiddleware);
 
-  const allowedOrigins = process.env.FRONTEND_URL
-    ?.split(",")
-    .map((origin) => origin.trim().replace(/\/$/, ""))
-    .filter(Boolean) ?? [];
+      const allowedOrigins = process.env.FRONTEND_URL
+        ?.split(",")
+        .map((origin) => origin.trim().replace(/\/$/, ""))
+        .filter(Boolean) ?? [];
 
       const originAllowed = allowedOrigins.some((allowedOrigin) => {
         const normalizedAllowed = allowedOrigin.replace(/\/$/, "");
@@ -67,7 +66,7 @@ async function bootstrap(): Promise<void> {
 
   app.all("/api/auth/*splat", toNodeHandler(auth));
 
-  app.get("/", (_req, res) => {
+  app.get("/", (req, res) => {
     res.send("Classroom API is running.");
   });
 
@@ -80,13 +79,15 @@ async function bootstrap(): Promise<void> {
   app.use("/users", usersRouter);
 
   app.get("/health", (_req, res) => {
-  return res.status(200).json({
-    status: "ok",
+    res.status(200).json({
+      status: "ok",
+    });
   });
-});
 
-  app.listen(port, host, () => {
-    console.log(`Server running on http://localhost:${port}`);
+  console.log("PORT =", process.env.PORT);
+
+  app.listen(port, () => {
+    console.log(`Server running on port ${port}`);
   });
 }
 
