@@ -79,6 +79,12 @@ async function bootstrap(): Promise<void> {
   app.use("/classes", classesRouter);
   app.use("/users", usersRouter);
 
+  app.get("/health", (_req, res) => {
+  return res.status(200).json({
+    status: "ok",
+  });
+});
+
   app.listen(port, host, () => {
     console.log(`Server running on http://localhost:${port}`);
   });
