@@ -39,6 +39,12 @@ async function bootstrap(): Promise<void> {
     const { default: usersRouter } = await import("./routes/usersRouter.js");
     console.log("USERS OK");
 
+    const { default: departmentsRouter } = await import("./routes/departmentsRouter.js");
+    console.log("DEPARTMENTS OK");
+
+    const { default: dashboardRouter } = await import("./routes/dashboardRouter.js");
+    console.log("DASHBOARD OK");
+
     const { default: securityMiddleware } = await import("./middleware/security.js");
     console.log("SECURITY OK");
 
@@ -87,10 +93,14 @@ async function bootstrap(): Promise<void> {
     app.use("/api/subjects", subjectsRouter);
     app.use("/api/classes", classesRouter);
     app.use("/api/users", usersRouter);
+    app.use("/api/departments", departmentsRouter);
+    app.use("/api/dashboard", dashboardRouter);
 
     app.use("/subjects", subjectsRouter);
     app.use("/classes", classesRouter);
     app.use("/users", usersRouter);
+    app.use("/departments", departmentsRouter);
+    app.use("/dashboard", dashboardRouter);
 
     const server = app.listen(port, () => {
       console.log(`Server running on port ${port}`);
