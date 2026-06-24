@@ -137,8 +137,8 @@ router.get("/:id", async (req, res) => {
       })
       .from(classes)
       .leftJoin(subjects, eq(classes.subjectId, subjects.id))
-      .leftJoin(departments, eq(subjects.departmentId, departments.id))
       .leftJoin(user, eq(classes.teacherId, user.id))
+      .leftJoin(departments, eq(subjects.departmentId, departments.id))
       .where(eq(classes.id, classId));
 
     if (!classDetails) {
